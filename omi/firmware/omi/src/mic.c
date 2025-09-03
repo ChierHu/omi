@@ -101,9 +101,10 @@ int mic_start()
         },
     };
 
-    /* Configure for mono audio */
-    cfg.channel.req_num_chan = 1;
-    cfg.channel.req_chan_map_lo = dmic_build_channel_map(0, 0, PDM_CHAN_LEFT);
+    /* Configure for stereo audio */
+    cfg.channel.req_num_chan = 2;
+    cfg.channel.req_chan_map_lo = dmic_build_channel_map(0, 0, PDM_CHAN_LEFT) |
+                                 dmic_build_channel_map(1, 0, PDM_CHAN_RIGHT);
     cfg.streams[0].pcm_rate = MAX_SAMPLE_RATE;
     cfg.streams[0].block_size = BLOCK_SIZE(cfg.streams[0].pcm_rate, cfg.channel.req_num_chan);
 

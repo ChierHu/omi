@@ -38,7 +38,7 @@ static void codec_handler(uint8_t *data, size_t len)
 static void mic_handler(int16_t *buffer)
 {
     // Track total bytes processed (each sample is 2 bytes)
-    total_mic_buffer_bytes += 1;
+    total_mic_buffer_bytes += MIC_BUFFER_SAMPLES * sizeof(int16_t);
 
     int err = codec_receive_pcm(buffer, MIC_BUFFER_SAMPLES);
     if (err)

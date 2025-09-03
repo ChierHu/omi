@@ -1,5 +1,6 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/ring_buffer.h>
+#include <zephyr/kernel.h>
 #include "codec.h"
 #include "config.h"
 #include "utils.h"
@@ -50,15 +51,7 @@ static struct k_thread codec_thread;
 uint16_t execute_codec();
 
 #if CODEC_OPUS
-#if (CONFIG_OPUS_MODE == CONFIG_OPUS_MODE_CELT)
-#define OPUS_ENCODER_SIZE 7180
-#endif
-#if (CONFIG_OPUS_MODE == CONFIG_OPUS_MODE_HYBRID)
-#define OPUS_ENCODER_SIZE 10916
-#endif
-__ALIGN(4)
-static uint8_t m_opus_encoder[OPUS_ENCODER_SIZE];
-static OpusEncoder *const m_opus_state = (OpusEncoder *)m_opus_encoder;
+static OpusEncoder *m_opus_state;
 #endif
 
 void codec_entry()
@@ -97,8 +90,10 @@ int codec_start()
 
 // OPUS
 #if CODEC_OPUS
-    ASSERT_TRUE(opus_encoder_get_size(1) == sizeof(m_opus_encoder));
-    ASSERT_TRUE(opus_encoder_init(m_opus_state, 16000, 1, CODEC_OPUS_APPLICATION) == OPUS_OK);
+    size_t opus_size = opus_encoder_get_size(2);
+    m_opus_state = k_malloc(opus_size);
+    ASSERT_TRUE(m_opus_state != NULL);
+    ASSERT_TRUE(opus_encoder_init(m_opus_state, 16000, 2, CODEC_OPUS_APPLICATION) == OPUS_OK);
     ASSERT_TRUE(opus_encoder_ctl(m_opus_state, OPUS_SET_BITRATE(CODEC_OPUS_BITRATE)) == OPUS_OK);
     ASSERT_TRUE(opus_encoder_ctl(m_opus_state, OPUS_SET_VBR(CODEC_OPUS_VBR)) == OPUS_OK);
     ASSERT_TRUE(opus_encoder_ctl(m_opus_state, OPUS_SET_VBR_CONSTRAINT(0)) == OPUS_OK);
